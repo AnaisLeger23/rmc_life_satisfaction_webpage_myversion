@@ -1,7 +1,7 @@
 ---
 title: "Self-reported life satisfaction, 2011 to 2023"
 subtitle: "Replicating the Our World in Data Grapher"
-author: "YOUR NAME HERE" # Remember to add your name!
+author: "ANaïs Léger" # Remember to add your name!
 theme: united
 ---
 
@@ -36,7 +36,7 @@ cantril <-
     rename(Country = Entity)
 ```
 
-### Happiness across the world over time
+### Happiness across the world over time {.tabset}
 
 The World Happiness Report is a well-known source of cross-country data on self-reported life satisfaction, collected by the Gallup World Poll. The visualizations below present the ‘happiness scores’ for each country.
 
@@ -51,19 +51,25 @@ The main life evaluation question asked in the poll is the Cantril Life Ladder q
 
 ```{r}
 # In this tab, you will create a table similar to the one on the Our World in Data page.
-# The table should have the following columns:
-# Country, `2011`, `2023`, Absolute change, and Relative change.
 
-# You should:
-# 1. Use `select` to drop the Code column from the `cantril` data as it is not needed in the table.
-# 2. Filter the `cantril` data frame to just the years 2011 and 2023.
-# 3. Use the `pivot_wider` function to create the columns for 2011 and 2023.
-# (You may need backticks around column names with spaces or which start with numbers.)
-# 4. Use the `mutate` function to calculate the Absolute change and Relative change.
-# 5. Also with `mutate`, you should round your numbers to appropriate decimal places.
-# 6. Then use scales::percent to format the Relative change as a percentage.
-# 7. Use the `reactable` function to create and output the table.
-"WRITE_YOUR_CODE_HERE"
+years_table <- c(2011, 2023)
+
+cantril_table <- cantril %>% 
+  rename(cantril_ladder_score = "Cantril ladder score") %>% 
+  select("Country", "Year", "cantril_ladder_score") %>% 
+  filter(Year %in% years_table)
+
+cantril_table_wider <- cantril_table %>% 
+  pivot_wider(names_from = Year, values_from = cantril_ladder_score)
+
+cantril_table_wider <- cantril_table_wider %>% 
+  mutate(`Absolute change` = (`2023` - `2011`),
+         `Relative change` = (`2023` - `2011`) / `2011`) %>%
+  mutate(across(c(`2011`,`2023`,`Absolute change`), round, 2)) %>% 
+  mutate(`Relative change` = percent(`Relative change`, accuracy = 0.1))
+
+reactable(cantril_table_wider)
+
 ```
 
 
@@ -100,16 +106,22 @@ cantril %>%
 # similar to the one on the Our World in Data page.
 # Note that your chart will not have the ability to filter countries like the one on the Our World in Data page.
 
-# You should:
-# 1. Filter the cantril data to just 4 to 8 countries you want to highlight
-# 2. Use ggplot to create a line chart of the Cantril score over time, with different colors for each country
-# 3. Use geom_line to create the lines
-# 4. Use scale_y_continuous to set the y-axis limits to 0 and 10.
-# 5. Use labs to create neat labels for the chart
-# 6. Use theme_minimal to set the theme.
-# 7. Finally, use ggplotly to convert the ggplot chart to a plotly chart
 
-"WRITE_YOUR_CODE_HERE"
+countries_chart <- c("Afghanistan", "China", "Congo", "Costa Rica")
+
+cantril_chart <- cantril %>% 
+  filter(Country %in% countries_chart) %>% 
+  rename(cantril_ladder_score = `Cantril ladder score`)
+
+chart <- cantril_chart %>% 
+  ggplot(aes(x=Year, y=cantril_ladder_score, color=Country)) +
+  geom_line() +
+  scale_y_continuous(limits = c(0,10))+
+  labs(x="Years", y="Cantril ladder score")+
+  theme_minimal()
+
+ggplotly(chart)
+
 # (When you're done with this section, don't forget to add tabsets, as mentioned in the instructions.)
 ```
 
