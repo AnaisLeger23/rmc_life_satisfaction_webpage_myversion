@@ -1,7 +1,7 @@
 ---
 title: "Self-reported life satisfaction, 2011 to 2023"
 subtitle: "Replicating the Our World in Data Grapher"
-author: "ANaïs Léger" # Remember to add your name!
+author: "Anaïs Léger"
 theme: united
 ---
 
@@ -36,7 +36,7 @@ cantril <-
     rename(Country = Entity)
 ```
 
-### Happiness across the world over time {.tabset}
+### Happiness across the world over time
 
 The World Happiness Report is a well-known source of cross-country data on self-reported life satisfaction, collected by the Gallup World Poll. The visualizations below present the ‘happiness scores’ for each country.
 
@@ -44,6 +44,7 @@ The main life evaluation question asked in the poll is the Cantril Life Ladder q
 
 > “Please imagine a ladder, with steps numbered from 0 at the bottom to 10 at the top. The top of the ladder represents the best possible life for you and the bottom of the ladder represents the worst possible life for you. On which step of the ladder would you say you personally feel you stand at this time?”
 
+:::{.panel-tabset}
 
 ## 🔢 Table
 
@@ -68,7 +69,13 @@ cantril_table_wider <- cantril_table_wider %>%
   mutate(across(c(`2011`,`2023`,`Absolute change`), round, 2)) %>% 
   mutate(`Relative change` = percent(`Relative change`, accuracy = 0.1))
 
-reactable(cantril_table_wider)
+reactable(
+  cantril_table_wider,
+  columns = list(
+    `Relative change` = colDef(align = "right")
+  )
+)
+
 
 ```
 
@@ -107,7 +114,11 @@ cantril %>%
 # Note that your chart will not have the ability to filter countries like the one on the Our World in Data page.
 
 
-countries_chart <- c("Afghanistan", "China", "Congo", "Costa Rica")
+countries_chart <- c("Afghanistan", "China", "Congo", "Costa Rica", "Switzerland", "Madagascar")
+alexandrite_soft <- c(
+  "#240E31FF", "#CB6BCEFF", "#468892FF", "#74F3D3FF",
+  "#751C6DFF", "#FDC067FF", "#AC9ECEFF", "#6EC5ABFF"
+)
 
 cantril_chart <- cantril %>% 
   filter(Country %in% countries_chart) %>% 
@@ -117,12 +128,13 @@ chart <- cantril_chart %>%
   ggplot(aes(x=Year, y=cantril_ladder_score, color=Country)) +
   geom_line() +
   scale_y_continuous(limits = c(0,10))+
-  labs(x="Years", y="Cantril ladder score")+
+  labs(x="Years", y="Cantril ladder score") +
+  scale_color_manual(values = alexandrite_soft) +
   theme_minimal()
 
 ggplotly(chart)
 
-# (When you're done with this section, don't forget to add tabsets, as mentioned in the instructions.)
+
 ```
 
 ## 📈 Advanced Chart
@@ -178,14 +190,55 @@ function filter_default() {
 window.onload = filter_default;
 </script>
 
+## 📈 Top and bottom 10
 
 ```{r}
 # OPTIONAL CHALLENGE SECTION:
 
 # Add a final tab with a single figure that shows the top 10 and bottom 10 countries by happiness score in 2023. Remember to add a ## header and include it in the tabsets
-# "WRITE_YOUR_CODE_HERE"
-```
 
+cantril_10 <- cantril %>% 
+  rename(cantril_ladder_score = `Cantril ladder score`) %>% 
+  filter(Year == 2023) %>% 
+  arrange(desc(cantril_ladder_score)) %>% 
+  slice(c(1:10, (n() - 9):n()))
+
+# My initial plot
+# plot <- cantril_10 %>% 
+#   ggplot(aes(x=reorder(Country, cantril_ladder_score), y=cantril_ladder_score, fill=cantril_ladder_score)) +
+#   geom_col() +
+#   scale_fill_viridis_c(option = "D") +
+#   labs(x = "Top 10 and bottom 10 countries", y = "Cantril ladder score in year 2023") +
+#   guides(fill = FALSE) +
+#   coord_flip() +
+#   theme_minimal() +
+#   theme(axis.text.y = element_text(size = 10))
+
+# The plot improved through research, the use of ChatGPT, and personal adjustments
+plot <- ggplot(cantril_10, aes(y = reorder(Country, cantril_ladder_score))) +
+  geom_segment(aes(x = 0,
+        xend = 10,
+        yend = Country),
+    color = "grey80"
+  ) +
+  geom_point(
+    aes(x = cantril_ladder_score,
+        color = cantril_ladder_score),
+    size = 3
+  ) +
+  scale_color_viridis_c() +
+  scale_x_continuous(limits = c(0,10)) +
+  labs(
+    x = "Cantril ladder score (2023)",
+    y = ""
+  ) +
+  guides(color = FALSE) +
+  theme_minimal()
+
+ggplotly(plot)
+
+```
+:::
 
 # {.unlisted}
 
